@@ -63,7 +63,7 @@ class _ArtigosState extends State<Artigos> {
                       child: ListTile(
                         leading: Icon(Icons.inventory, color: Colors.blue),
                         title: Text(artigo),
-                        subtitle: Text("Código: 123456"), // dado fictício
+                        subtitle: Text("N° do Invetario : 123456\nInicio da Actualização ${DateTime.now()}"), // dado fictício
                       ),
                     );
                   }).toList(),
