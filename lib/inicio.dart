@@ -1,4 +1,7 @@
+import 'package:cibapp/views/artigos/listar.dart';
+import 'package:cibapp/views/salas/listar.dart';
 import 'package:flutter/material.dart';
+
 class Inicio extends StatefulWidget {
   const Inicio({super.key});
 
@@ -22,71 +25,80 @@ class _InicioState extends State<Inicio> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.black54,
         leading: IconButton(
           onPressed: () {
             Navigator.pop(context);
           },
-          icon: Icon(Icons.arrow_back_ios, size: 20, color: Colors.black,),
-        )
+          icon: const Icon(Icons.arrow_back_ios, size: 20, color: Colors.white),
+        ),
+        title: const Text(
+          "Início",
+          style: TextStyle(color: Colors.white),
+        ),
       ),
-        body: Container(
-          height: MediaQuery.of(context).size.height,
-          width: double.infinity,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start, // Optional for better alignment
-            children: [
-              Text("Dados do Artigo"),
-
-              SizedBox(height: 10), // Spacing between elements
-
-              TextFormField(
-                controller: _nomeArtigo,
-                autocorrect: true,
-                decoration: InputDecoration(
-                  labelText: "Nome do Artigo",
-                  hintText: "Nome do artigo",
-                  labelStyle: TextStyle(color: Colors.blue),
-                  border: OutlineInputBorder(),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.blue),
-                  ),
-                ),
+      body: Stack(
+        children: [
+          // 🔹 Fundo com imagem
+          Container(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage("assets/imagens/f-login__background.png"),
+                fit: BoxFit.cover,
               ),
-
-              SizedBox(height: 20), // Spacing before dropdown
-// Dentro do build()
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(
-                  labelText: "Artigos",
-                  hintText: "Selecione um artigo",
-                  labelStyle: TextStyle(color: Colors.blue),
-                  border: OutlineInputBorder(),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.blue),
-                  ),
-                ),
-                value: _artigoSelecionado,
-                items: _artigos.map((String artigo) {
-                  return DropdownMenuItem<String>(
-                    value: artigo,
-                    child: Text(artigo),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _artigoSelecionado = newValue!;
-                  });
-                },
-              ),
-
-            ],
+            ),
           ),
 
-        )
+          // 🔹 Conteúdo
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                children: [
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 6,
+                    child: ListTile(
+                      leading: const Icon(Icons.meeting_room, color: Colors.blue),
+                      title: const Text("Salas"),
+                      subtitle: const Text("Clique para ver os ativos de cada sala"),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const ListarSalas()),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 6,
+                    child: ListTile(
+                      leading: const Icon(Icons.inventory, color: Colors.green),
+                      title: const Text("Artigos"),
+                      subtitle: const Text("Clique para ver os ativos"),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const ListarArtigos()),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
