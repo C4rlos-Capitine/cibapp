@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 
 import '../../classes/Artigo.dart';
-
-import '../../classes/Artigo.dart';
-
+import '../../classes/Sala.dart';
 
 class RegistarArtigo extends StatefulWidget {
   const RegistarArtigo({super.key});
@@ -18,7 +16,24 @@ class _RegistarArtigoState extends State<RegistarArtigo> {
   final TextEditingController _numArtigoController = TextEditingController();
   final TextEditingController _nomeArtigoController = TextEditingController();
   final TextEditingController _codigoBarraController = TextEditingController();
-  final TextEditingController _idSalaController = TextEditingController();
+
+  int? _salaSelecionada;
+  List<Sala> _salas = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarSalas();
+  }
+
+  /// Carregar salas do SQLite
+  Future<void> _carregarSalas() async {
+    await Sala.openDb();
+    List<Sala> lista = await Sala.getAllSalas();
+    setState(() {
+      _salas = lista;
+    });
+  }
 
   /// Scanner de código de barras
   Future<void> _scanBarcode() async {
@@ -40,7 +55,7 @@ class _RegistarArtigoState extends State<RegistarArtigo> {
   Future<void> _salvarArtigo() async {
     if (_formKey.currentState!.validate()) {
       Artigo artigo = Artigo(
-        id_sala: int.tryParse(_idSalaController.text.trim()) ?? 0,
+        id_sala: _salaSelecionada ?? 0,
         codigo_barra: _codigoBarraController.text.trim(),
         num_artigo: _numArtigoController.text.trim(),
         nome_artigo: _nomeArtigoController.text.trim(),
@@ -58,7 +73,9 @@ class _RegistarArtigoState extends State<RegistarArtigo> {
         _numArtigoController.clear();
         _nomeArtigoController.clear();
         _codigoBarraController.clear();
-        _idSalaController.clear();
+        setState(() {
+          _salaSelecionada = null;
+        });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Erro ao registar artigo.")),
@@ -142,12 +159,11 @@ class _RegistarArtigoState extends State<RegistarArtigo> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Sala associada
-                    TextFormField(
-                      controller: _idSalaController,
-                      keyboardType: TextInputType.number,
+                    // Sala associada (Dropdown)
+                    DropdownButtonFormField<int>(
+                      value: _salaSelecionada,
                       decoration: InputDecoration(
-                        labelText: "ID da Sala",
+                        labelText: "Sala",
                         prefixIcon: const Icon(Icons.meeting_room),
                         filled: true,
                         fillColor: Colors.white.withOpacity(0.9),
@@ -155,8 +171,19 @@ class _RegistarArtigoState extends State<RegistarArtigo> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
+                      items: _salas.map((sala) {
+                        return DropdownMenuItem<int>(
+                          value: sala.id_sala,
+                          child: Text("Sala ${sala.num_sala}"),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _salaSelecionada = value;
+                        });
+                      },
                       validator: (v) =>
-                      v == null || v.isEmpty ? "Informe o ID da sala" : null,
+                      v == null ? "Selecione uma sala" : null,
                     ),
                     const SizedBox(height: 16),
 

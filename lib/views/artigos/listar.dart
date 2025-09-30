@@ -126,7 +126,7 @@ class _ListarArtigosState extends State<ListarArtigos> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => RegistarSala()),
+            MaterialPageRoute(builder: (context) => RegistarArtigo()),
           ).then((_){
 
           });

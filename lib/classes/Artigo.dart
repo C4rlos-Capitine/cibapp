@@ -94,7 +94,7 @@ class Artigo {
       'nome_artigo': nome_artigo,
       'data_registo': data_registo.toIso8601String(),
       'data_update': data_update.toIso8601String(),
-      'isSynced': isSynced,
+      'isSynced': this.isSynced == 1, // bool, não int
       'lastUpdated': lastUpdated.toIso8601String(),
     };
   }
@@ -109,6 +109,17 @@ class Artigo {
       print('Erro ao inserir artigo: $e');
       return null;
     }
+  }
+
+  static Future<void> insertOrUpdate(Artigo artigo) async {
+    openDb();
+    var db = await database;
+
+    await db.insert(
+      'artigo',
+      artigo.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace, // substitui se já existir mesma PK
+    );
   }
 
   static Future<List<Artigo>> getAllArtigos() async {
@@ -134,11 +145,13 @@ class Artigo {
       nome_artigo: map['nome_artigo'],
       data_registo: DateTime.parse(map['data_registo']),
       data_update: DateTime.parse(map['data_update']),
-      isSynced: map['isSynced'] ?? 0,
-      lastUpdated: DateTime.tryParse(map['lastUpdated'] ?? '') ??
-          DateTime.now(),
+      isSynced: (map['isSynced'] is bool)
+          ? (map['isSynced'] ? 1 : 0)
+          : (map['isSynced'] ?? 0),
+      lastUpdated: DateTime.tryParse(map['lastUpdated'] ?? '') ?? DateTime.now(),
     );
   }
+
 }
 
 

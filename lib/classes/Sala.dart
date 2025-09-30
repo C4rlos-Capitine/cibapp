@@ -76,7 +76,7 @@ class Sala {
       'id_sala': id_sala,
       'codigo_barra': codigo_barra,
       'num_sala': num_sala,
-      'isSynced': isSynced,
+      'isSynced': this.isSynced == 1, // bool, não int
       'lastUpdated': lastUpdated.toIso8601String(),
     };
   }
@@ -92,6 +92,18 @@ class Sala {
       return null;
     }
   }
+
+  static Future<void> insertOrUpdate(Sala sala) async {
+    openDb();
+    var db = await database;
+
+    await db.insert(
+      'sala',
+      sala.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
 
   static Future<List<Sala>> getAllSalas() async {
     openDb();

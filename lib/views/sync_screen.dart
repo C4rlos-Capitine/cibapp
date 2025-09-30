@@ -1,27 +1,19 @@
 import 'package:cibapp/views/artigos/listar.dart';
 import 'package:cibapp/views/salas/listar.dart';
-import 'package:cibapp/views/sync_screen.dart';
 import 'package:flutter/material.dart';
 
-class Inicio extends StatefulWidget {
-  const Inicio({super.key});
+import '../sincronizacao/artigos.dart';
+import '../sincronizacao/salas.dart';
+
+
+class sync_screen extends StatefulWidget {
+  const sync_screen({super.key});
 
   @override
-  State<Inicio> createState() => _InicioState();
+  State<sync_screen> createState() => _sync_screenState();
 }
 
-class _InicioState extends State<Inicio> {
-  TextEditingController _nomeArtigo = TextEditingController();
-  String? _artigoSelecionado;
-
-  final List<String> _artigos = [
-    'Introdução à Inteligência Artificial',
-    'Técnicas de Machine Learning',
-    'Flutter para Iniciantes',
-    'Design de Interfaces Modernas',
-    'O Futuro da Computação Quântica',
-  ];
-
+class _sync_screenState extends State<sync_screen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -30,12 +22,12 @@ class _InicioState extends State<Inicio> {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.black54,
-        /*leading: IconButton(
+        leading: IconButton(
           onPressed: () {
             Navigator.pop(context);
           },
           icon: const Icon(Icons.arrow_back_ios, size: 20, color: Colors.white),
-        ),*/
+        ),
         title: const Text(
           "Início",
           style: TextStyle(color: Colors.white),
@@ -65,35 +57,15 @@ class _InicioState extends State<Inicio> {
                     ),
                     elevation: 6,
                     child: ListTile(
-                      leading: const Icon(Icons.meeting_room, color: Colors.blue),
-                      title: const Text("Salas"),
-                      subtitle: const Text("Clique para ver os ativos de cada sala"),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const ListarSalas()),
-                        );
+                      leading: const Icon(Icons.sync, color: Colors.green),
+                      title: const Text("Sincronização Salas"),
+                      subtitle: const Text("Clique para fazer upload "),
+                      onTap: () async {
+                       await syncSalas();
                       },
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 6,
-                    child: ListTile(
-                      leading: const Icon(Icons.inventory, color: Colors.green),
-                      title: const Text("Artigos"),
-                      subtitle: const Text("Clique para ver os ativos"),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const ListarArtigos()),
-                        );
-                      },
-                    ),
-                  ),
+                  SizedBox(height: 10,),
                   Card(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -101,22 +73,53 @@ class _InicioState extends State<Inicio> {
                     elevation: 6,
                     child: ListTile(
                       leading: const Icon(Icons.sync, color: Colors.green),
-                      title: const Text("Sincronização de Dados"),
-                      subtitle: const Text("Clique para mais sobre sync"),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const sync_screen()),
-                        );
+                      title: const Text("Sincronização Ativos"),
+                      subtitle: const Text("Clique para fazer upload "),
+                      onTap: () async {
+                        await syncArtigos();
+                      },
+                    ),
+                  ),
+                  SizedBox(height: 10,),
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 6,
+                    child: ListTile(
+                      leading: const Icon(Icons.sync, color: Colors.green),
+                      title: const Text("Baixar Dados dos ativos"),
+                      subtitle: const Text("Clique para baixar dados "),
+                      onTap: () async {
+                        await fetchAndStoreArtigos();
+                      },
+                    ),
+                  ),
+                  SizedBox(height: 10,),
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 6,
+                    child: ListTile(
+                      leading: const Icon(Icons.sync, color: Colors.green),
+                      title: const Text("Baixar Dados das salas"),
+                      subtitle: const Text("Clique para baixar dados"),
+                      onTap: () async {
+                        await fetchAndStoreSalas();
                       },
                     ),
                   ),
                 ],
               ),
             ),
+
+
           ),
+
+
         ],
       ),
-    );
+    );;
   }
 }
