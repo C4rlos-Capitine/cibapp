@@ -76,7 +76,7 @@ class Sala {
       'id_sala': id_sala,
       'codigo_barra': codigo_barra,
       'num_sala': num_sala,
-      'isSynced': this.isSynced == 1, // bool, não int
+      'isSynced': isSynced, // bool, não int
       'lastUpdated': lastUpdated.toIso8601String(),
     };
   }
@@ -92,6 +92,22 @@ class Sala {
       return null;
     }
   }
+  static Future<Sala?> getByCodigoBarra(String codigo) async {
+    openDb();
+    var db = await database;
+
+    final List<Map<String, dynamic>> maps = await db.query(
+      'sala',
+      where: 'codigo_barra = ?',
+      whereArgs: [codigo],
+    );
+
+    if (maps.isNotEmpty) {
+      return Sala.fromMap(maps.first);
+    }
+    return null;
+  }
+
 
   static Future<void> insertOrUpdate(Sala sala) async {
     openDb();
@@ -121,9 +137,9 @@ class Sala {
 
   factory Sala.fromMap(Map<String, dynamic> map) {
     return Sala(
-      id_sala: map['id_sala'],
-      codigo_barra: map['codigo_barra'],
-      num_sala: map['num_sala'],
+      id_sala: map['id_sala'] ?? 0,
+      codigo_barra: map['codigo_barra']?.toString() ?? "",
+      num_sala: map['num_sala']?.toString() ?? "",
       isSynced: map['isSynced'] ?? 0,
       lastUpdated: DateTime.tryParse(map['lastUpdated'] ?? '') ??
           DateTime.now(),

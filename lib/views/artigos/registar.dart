@@ -47,6 +47,7 @@ class _RegistarArtigoState extends State<RegistarArtigo> {
     if (res is String && res != "-1") {
       setState(() {
         _codigoBarraController.text = res;
+        _numArtigoController.text = res;
       });
     }
   }

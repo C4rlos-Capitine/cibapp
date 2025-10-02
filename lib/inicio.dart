@@ -1,10 +1,19 @@
+import 'package:cibapp/views/artigos/artigo_por_sala.dart';
+//import 'package:cibapp/views/artigos/artigos_por_sala.dart';
 import 'package:cibapp/views/artigos/listar.dart';
+import 'package:cibapp/views/inventario/InventarioListPage.dart';
+import 'package:cibapp/views/inventario/inventario.dart';
 import 'package:cibapp/views/salas/listar.dart';
 import 'package:cibapp/views/sync_screen.dart';
 import 'package:flutter/material.dart';
 
+import 'classes/ArtigoInventario.dart';
+import 'classes/Inventario.dart';
+
 class Inicio extends StatefulWidget {
   const Inicio({super.key});
+
+
 
   @override
   State<Inicio> createState() => _InicioState();
@@ -23,13 +32,21 @@ class _InicioState extends State<Inicio> {
   ];
 
   @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    Inventario.openDb();
+    InventarioArtigo.openDb();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.black54,
+        backgroundColor:Colors.blue.shade700,
         /*leading: IconButton(
           onPressed: () {
             Navigator.pop(context);
@@ -84,12 +101,29 @@ class _InicioState extends State<Inicio> {
                     elevation: 6,
                     child: ListTile(
                       leading: const Icon(Icons.inventory, color: Colors.green),
-                      title: const Text("Artigos"),
+                      title: const Text("Ativos"),
                       subtitle: const Text("Clique para ver os ativos"),
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => const ListarArtigos()),
+                        );
+                      },
+                    ),
+                  ),
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 6,
+                    child: ListTile(
+                      leading: const Icon(Icons.inventory, color: Colors.green),
+                      title: const Text("Ler Sala"),
+                      subtitle: const Text("Clique para ver ativos de uma sala"),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const ArtigosPorSala()),
                         );
                       },
                     ),
@@ -107,6 +141,40 @@ class _InicioState extends State<Inicio> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => const sync_screen()),
+                        );
+                      },
+                    ),
+                  ),
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 6,
+                    child: ListTile(
+                      leading: const Icon(Icons.inventory, color: Colors.green),
+                      title: const Text("Registo de Inventário"),
+                      subtitle: const Text("Clique para registar"),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const InventarioPage()),
+                        );
+                      },
+                    ),
+                  ),
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 6,
+                    child: ListTile(
+                      leading: const Icon(Icons.inventory, color: Colors.green),
+                      title: const Text("Histórico de Inventário"),
+                      subtitle: const Text("Clique para mais.."),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const InventarioListPage()),
                         );
                       },
                     ),

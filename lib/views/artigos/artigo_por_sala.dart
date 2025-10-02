@@ -1,38 +1,41 @@
-import 'package:cibapp/views/artigos/registar.dart';
 import 'package:flutter/material.dart';
+import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 
 import '../../classes/Artigo.dart';
-import '../salas/registar.dart';
+import '../../classes/Sala.dart';
 
-
-class ListarArtigos extends StatefulWidget {
-  const ListarArtigos({super.key});
+class ArtigosPorSala extends StatefulWidget {
+  const ArtigosPorSala({super.key});
 
   @override
-  State<ListarArtigos> createState() => _ListarArtigosState();
+  State<ArtigosPorSala> createState() => _ArtigosPorSalaState();
 }
 
-class _ListarArtigosState extends State<ListarArtigos> {
-  late Future<List<Artigo>> _artigosFuture;
+class _ArtigosPorSalaState extends State<ArtigosPorSala> {
+  Sala? salaSelecionada;
+  Future<List<Artigo>>? _artigosFuture;
 
-  @override
-  void initState() {
-    super.initState();
-    _carregarArtigos();
-  }
-
-  void _carregarArtigos() {
-    setState(() {
-      _artigosFuture = Artigo.getAllArtigos();
-    });
-  }
-
-  Future<void> _deletarArtigo(int id) async {
-    await Artigo.delete(id);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Artigo removido com sucesso!")),
+  /// Escanear código da sala
+  Future<void> _scanSala() async {
+    var res = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const SimpleBarcodeScannerPage()),
     );
-    _carregarArtigos();
+
+    if (res is String && res != "-1") {
+      Sala? sala = await Sala.getByCodigoBarra(res);
+
+      if (sala != null) {
+        setState(() {
+          salaSelecionada = sala;
+          _artigosFuture = Artigo.getBySala(sala.id_sala!);
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Sala não encontrada.")),
+        );
+      }
+    }
   }
 
   @override
@@ -55,30 +58,47 @@ class _ListarArtigosState extends State<ListarArtigos> {
             child: Column(
               children: [
                 AppBar(
-                  title: const Text("Lista de Artigos", style: TextStyle(color: Colors.white),),
+                  title: Text(
+                    salaSelecionada != null
+                        ? "Artigos da Sala ${salaSelecionada!.num_sala}"
+                        : "Artigos por Sala",
+                    style: const TextStyle(color: Colors.white),
+                  ),
                   backgroundColor: Colors.black54,
                   foregroundColor: Colors.white,
                   elevation: 0,
                   actions: [
                     IconButton(
-                      icon: const Icon(Icons.refresh, color: Colors.white,),
-                      onPressed: _carregarArtigos,
-                    )
+                      icon: const Icon(Icons.qr_code_scanner,
+                          color: Colors.white),
+                      onPressed: _scanSala,
+                    ),
                   ],
                 ),
+
+                // 🔹 Lista de artigos
                 Expanded(
-                  child: FutureBuilder<List<Artigo>>(
+                  child: _artigosFuture == null
+                      ? const Center(
+                    child: Text("Escaneie o código de uma sala.",
+                        style: TextStyle(color: Colors.white)),
+                  )
+                      : FutureBuilder<List<Artigo>>(
                     future: _artigosFuture,
                     builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
+                      if (snapshot.connectionState ==
+                          ConnectionState.waiting) {
+                        return const Center(
+                            child: CircularProgressIndicator());
                       }
 
                       if (snapshot.hasError) {
-                        return Center(child: Text("Erro: ${snapshot.error}"));
+                        return Center(
+                            child: Text("Erro: ${snapshot.error}"));
                       }
 
-                      if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      if (!snapshot.hasData ||
+                          snapshot.data!.isEmpty) {
                         return const Center(
                             child: Text("Nenhum artigo encontrado.",
                                 style: TextStyle(color: Colors.white)));
@@ -101,16 +121,7 @@ class _ListarArtigosState extends State<ListarArtigos> {
                                   color: Colors.green),
                               title: Text(artigo.nome_artigo),
                               subtitle: Text(
-                                  "Nº: ${artigo.num_artigo} | Sala: ${artigo.id_sala}\nCódigo: ${artigo.codigo_barra}"),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.delete,
-                                    color: Colors.red),
-                                onPressed: () {
-                                  if (artigo.id_artigo != null) {
-                                    _deletarArtigo(artigo.id_artigo!);
-                                  }
-                                },
-                              ),
+                                  "Nº: ${artigo.num_artigo} | Código: ${artigo.codigo_barra}"),
                             ),
                           );
                         },
@@ -124,16 +135,9 @@ class _ListarArtigosState extends State<ListarArtigos> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => RegistarArtigo()),
-          ).then((_){
-
-          });
-        },
-        child: Icon(Icons.add),
-        backgroundColor: Colors.blue, // Customize as needed
+        onPressed: _scanSala,
+        child: const Icon(Icons.qr_code),
+        backgroundColor: Colors.blue,
       ),
     );
   }

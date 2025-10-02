@@ -34,6 +34,7 @@ class _RegistarSalaState extends State<RegistarSala> {
     if (res is String && res != "-1") {
       setState(() {
         _codigoBarraController.text = res;
+
       });
     }
   }
