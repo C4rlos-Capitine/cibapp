@@ -1,5 +1,4 @@
-import 'package:cibapp/views/artigos/listar.dart';
-import 'package:cibapp/views/salas/listar.dart';
+
 import 'package:flutter/material.dart';
 
 import '../sincronizacao/artigos.dart';
@@ -61,7 +60,30 @@ class _sync_screenState extends State<sync_screen> {
                       title: const Text("Sincronização Salas"),
                       subtitle: const Text("Clique para fazer upload "),
                       onTap: () async {
-                       await syncSalas();
+                      bool resp = await syncSalas();
+                      if(resp==true){
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Salas sincronizadas com sucesso',
+                              style: TextStyle(color: Colors.blue[900]),
+                            ),
+                            backgroundColor:
+                            Color.fromARGB(255, 55, 189, 26),
+                          ),
+                        );
+                      }else{
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Não nada por actualizar',
+                              style: TextStyle(color: Colors.blue[900]),
+                            ),
+                            backgroundColor:
+                            Color.fromARGB(255, 235, 65, 3),
+                          ),
+                        );
+                      }
                       },
                     ),
                   ),
@@ -76,7 +98,30 @@ class _sync_screenState extends State<sync_screen> {
                       title: const Text("Sincronização Ativos"),
                       subtitle: const Text("Clique para fazer upload "),
                       onTap: () async {
-                        await syncArtigos();
+                        bool resp = await syncArtigos();
+                        if(resp==true){
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Ativos sincronizadas com sucesso',
+                                style: TextStyle(color: Colors.blue[900]),
+                              ),
+                              backgroundColor:
+                              Color.fromARGB(255, 55, 189, 26),
+                            ),
+                          );
+                        }else{
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Não nada por actualizar',
+                                style: TextStyle(color: Colors.blue[900]),
+                              ),
+                              backgroundColor:
+                              Color.fromARGB(255, 235, 65, 3),
+                            ),
+                          );
+                        }
                       },
                     ),
                   ),
@@ -120,6 +165,6 @@ class _sync_screenState extends State<sync_screen> {
 
         ],
       ),
-    );;
+    );
   }
 }

@@ -3,14 +3,15 @@ import 'package:http/http.dart' as http;
 
 import '../classes/Sala.dart';
 
-Future<void> syncSalas() async {
+Future<bool> syncSalas() async {
+  bool resp = false;
   try {
     // 1. Buscar salas ainda não sincronizadas
     List<Sala> unsynced = await Sala.getUnsyncedSalas();
 
     if (unsynced.isEmpty) {
       print("Nenhuma sala para sincronizar");
-      return;
+      return false;
     }
 
     // 2. Converter lista para JSON
@@ -23,7 +24,7 @@ Future<void> syncSalas() async {
 
     // 3. Enviar para a API remota
     final response = await http.post(
-      Uri.parse("http://192.168.10.102:5021/api/Sala/sync"),
+      Uri.parse("http://5.189.138.20:8070/api/Sala/sync"),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode(unsynced.map((a) => a.toMap()).toList()),
     );
@@ -37,19 +38,21 @@ Future<void> syncSalas() async {
         sala.isSynced = 1;
         //await Sala.updateSala(sala);
       }
+      resp = true;
     } else {
       print("Erro ao sincronizar: ${response.body}");
     }
   } catch (e) {
     print("Erro no sync: $e");
   }
+  return resp;
 }
 
 
 
 Future<void> fetchAndStoreSalas() async {
   try {
-    final response = await http.get(Uri.parse("http://192.168.10.102:5021/api/Sala"));
+    final response = await http.get(Uri.parse("http://5.189.138.20:8070/api/Sala"));
 
     if (response.statusCode == 200) {
       List<dynamic> data = jsonDecode(response.body);

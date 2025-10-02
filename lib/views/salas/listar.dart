@@ -54,12 +54,12 @@ class _ListarSalasState extends State<ListarSalas> {
             child: Column(
               children: [
                 AppBar(
-                  title: const Text("Lista de Salas"),
+                  title: const Text("Lista de Salas",style: TextStyle(color: Colors.white),),
                   backgroundColor: Colors.black54,
                   elevation: 0,
                   actions: [
                     IconButton(
-                      icon: const Icon(Icons.refresh),
+                      icon: const Icon(Icons.refresh,color: Colors.white),
                       onPressed: _carregarSalas,
                     )
                   ],

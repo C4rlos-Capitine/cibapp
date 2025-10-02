@@ -3,14 +3,15 @@ import 'package:http/http.dart' as http;
 
 import '../classes/Artigo.dart';
 
-Future<void> syncArtigos() async {
+Future<bool> syncArtigos() async {
+  bool resp = false;
   try {
     // 1. Buscar artigos ainda não sincronizados
     List<Artigo> unsynced = await Artigo.getUnsyncedArtigos();
 
     if (unsynced.isEmpty) {
       print("Nenhum artigo para sincronizar");
-      return;
+      return false;
     }
 
     // 2. Converter lista para JSON
@@ -23,7 +24,7 @@ Future<void> syncArtigos() async {
 
     // 3. Enviar para a API remota
     final response = await http.post(
-      Uri.parse("http://192.168.10.102:5021/api/Artigo/sync"),
+      Uri.parse("http://5.189.138.20:8070/api/Artigo/sync"),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode(unsynced.map((a) => a.toMap()).toList()),
     );
@@ -38,19 +39,21 @@ Future<void> syncArtigos() async {
         artigo.isSynced = 1;
         //await Artigo.updateArtigo(artigo);
       }
+      resp = true;
     } else {
       print("Erro ao sincronizar: ${response.body}");
     }
   } catch (e) {
     print("Erro no sync: $e");
   }
+  return resp;
 }
 
 
 
 Future<void> fetchAndStoreArtigos() async {
   try {
-    final response = await http.get(Uri.parse("http://192.168.10.102:5021/api/Artigo"));
+    final response = await http.get(Uri.parse("http://5.189.138.20:8070/api/Artigo"));
 
     if (response.statusCode == 200) {
       List<dynamic> data = jsonDecode(response.body);

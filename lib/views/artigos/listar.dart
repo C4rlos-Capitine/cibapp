@@ -55,12 +55,13 @@ class _ListarArtigosState extends State<ListarArtigos> {
             child: Column(
               children: [
                 AppBar(
-                  title: const Text("Lista de Artigos"),
+                  title: const Text("Lista de Artigos", style: TextStyle(color: Colors.white),),
                   backgroundColor: Colors.black54,
+                  foregroundColor: Colors.white,
                   elevation: 0,
                   actions: [
                     IconButton(
-                      icon: const Icon(Icons.refresh),
+                      icon: const Icon(Icons.refresh, color: Colors.white,),
                       onPressed: _carregarArtigos,
                     )
                   ],
