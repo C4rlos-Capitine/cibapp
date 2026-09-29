@@ -9,24 +9,26 @@ import '../../classes/Inventario.dart';
 import '../../sincronizacao/artigos.dart';
 import '../../sincronizacao/salas.dart';
 
-class InventarioPage extends StatefulWidget {
-  const InventarioPage({Key? key}) : super(key: key);
+
+class inventario_teste extends StatefulWidget {
+  const inventario_teste({super.key});
 
   @override
-  State<InventarioPage> createState() => _InventarioPageState();
+  State<inventario_teste> createState() => _inventario_testeState();
 }
 
-class _InventarioPageState extends State<InventarioPage> {
+class _inventario_testeState extends State<inventario_teste> {
   final nomeCtrl = TextEditingController();
+
   Sala? salaSelecionada;
+  TextEditingController CodSalaCtrl = TextEditingController();
+  TextEditingController CodArtigoCtrl = TextEditingController();
   List<Artigo> artigosLidos = [];
-  bool _isLoading = false;
 
   /// 🔹 Lê o código de barras da sala
   Future<void> lerSala() async {
-    if (_isLoading) return;
-
-    var result = await SimpleBarcodeScanner.scanBarcode(
+    // 🔹 Abre o scanner para ler o código da sala
+    /*var result = await SimpleBarcodeScanner.scanBarcode(
       context,
       barcodeAppBar: const BarcodeAppBar(
         appBarTitle: 'Leitura da Sala',
@@ -39,45 +41,47 @@ class _InventarioPageState extends State<InventarioPage> {
     );
 
     if (result == null || result.isEmpty || result == "-1") return;
+*/
+    // 🔹 Tenta buscar no banco local primeiro
+    Sala? sala = await Sala.getByCodigoBarra(CodSalaCtrl.text);
 
-    setState(() => _isLoading = true);
+    // 🔹 Se não encontrou localmente → tenta buscar no servidor
+    if (sala == null) {
+      print("Sala não encontrada localmente. Tentando buscar do servidor...");
+      try {
+        final baixada = await baixarEGuardarSala(CodSalaCtrl.text);
 
-    try {
-      Sala? sala = await Sala.getByCodigoBarra(result);
+        if (baixada != null) {
+          sala = baixada; // já vem salva e com unique_id
 
-      if (sala == null) {
-        final baixada = await baixarEGuardarSala(result);
-
-        if (baixada == null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Sala não encontrada no servidor: $result')),
+            SnackBar(content: Text('Sala baixada e salva: ${sala.num_sala}')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Sala não encontrada no servidor: $CodSalaCtrl.text')),
           );
           return;
         }
-
-        sala = baixada;
-
+      } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Sala baixada: ${sala.num_sala}')),
+          SnackBar(content: Text('Erro ao buscar sala do servidor: $e')),
         );
+        return;
       }
+    }
 
+    // 🔹 Garante que a sala foi encontrada e adiciona ao estado
+    if (sala != null) {
       setState(() {
         salaSelecionada = sala;
       });
-
+      print("✅ Sala selecionada com unique_id: ${sala.unique_id}");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sala selecionada: ${sala!.num_sala}')),
+        SnackBar(content: Text('Sala encontrada: ${sala.num_sala}')),
       );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao ler sala: $e')),
-      );
-    } finally {
-      setState(() => _isLoading = false);
     }
   }
-
 
 
   /// 🔹 Lê o código de barras de um artigo e adiciona à lista
@@ -89,9 +93,8 @@ class _InventarioPageState extends State<InventarioPage> {
       return;
     }
 
-    if (_isLoading) return;
-
-    var result = await SimpleBarcodeScanner.scanBarcode(
+    // 🔹 Abre o scanner de código de barras
+   /* var result = await SimpleBarcodeScanner.scanBarcode(
       context,
       barcodeAppBar: const BarcodeAppBar(
         appBarTitle: 'Leitura de Artigos',
@@ -104,48 +107,46 @@ class _InventarioPageState extends State<InventarioPage> {
     );
 
     if (result == null || result.isEmpty || result == "-1") return;
+*/
+    // 🔹 Tenta buscar no banco local primeiro
+    Artigo? artigo = await Artigo.getByCodigoBarra(CodArtigoCtrl.text);
 
-    setState(() => _isLoading = true);
+    // 🔹 Se não encontrou localmente → tenta buscar no servidor
+    if (artigo == null) {
+      print("Artigo não encontrado localmente. Tentando buscar do servidor...");
+      try {
+        final baixado = await baixarEGuardarArtigo(CodArtigoCtrl.text);
 
-    try {
-      Artigo? artigo = await Artigo.getByCodigoBarra(result);
-
-      if (artigo == null) {
-        final baixado = await baixarEGuardarArtigo(result);
-
-        if (baixado == null) {
+        if (baixado != null) {
+          artigo =  await Artigo.getByCodigoBarra(baixado.codigo_barra) ; // recebe o artigo retornado
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Artigo não encontrado: $result')),
+            SnackBar(content: Text('Artigo baixado e salvo: ${baixado.nome_artigo}')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Artigo não encontrado no servidor: $CodArtigoCtrl.text')),
           );
           return;
         }
-
-        artigo = await Artigo.getByCodigoBarra(baixado.codigo_barra);
-
+      } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Artigo baixado: ${artigo!.nome_artigo}')),
-        );
-      }
-
-      if (artigosLidos.any((a) => a.codigo_barra == artigo!.codigo_barra)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Artigo já adicionado!')),
+          SnackBar(content: Text('Erro ao buscar artigo do servidor: $e')),
         );
         return;
       }
+    }
 
+    // 🔹 Adiciona o artigo à lista se ainda não existir
+    if (!artigosLidos.any((a) => a.codigo_barra == artigo?.codigo_barra)) {
       setState(() {
         artigosLidos.add(artigo!);
       });
-    } catch (e) {
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao ler artigo: $e')),
+        const SnackBar(content: Text('Artigo já adicionado!')),
       );
-    } finally {
-      setState(() => _isLoading = false);
     }
   }
-
 
   /// 🔹 Grava o inventário e os artigos associados
   Future<void> gravarInventario() async {
@@ -256,7 +257,19 @@ class _InventarioPageState extends State<InventarioPage> {
                     ),
                   ),
                   const SizedBox(height: 10),
-
+                  TextField(
+                    controller: CodSalaCtrl,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      labelText: 'Código da Sala',
+                      labelStyle: const TextStyle(color: Colors.white70),
+                      filled: true,
+                      fillColor: Colors.white.withOpacity(0.1),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
                   // 🔹 Leitura da sala
                   ElevatedButton.icon(
                     onPressed: lerSala,
@@ -280,6 +293,20 @@ class _InventarioPageState extends State<InventarioPage> {
                       ),
                     ),
                     const SizedBox(height: 10),
+
+                    TextField(
+                      controller: CodArtigoCtrl,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        labelText: 'Código do Artigo',
+                        labelStyle: const TextStyle(color: Colors.white70),
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.1),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
 
                     ElevatedButton.icon(
                       onPressed: lerCodigoBarra,
@@ -353,29 +380,6 @@ class _InventarioPageState extends State<InventarioPage> {
               ),
             ),
           ),
-          // 🔹 OVERLAY DE PROCESSAMENTO
-          if (_isLoading)
-            Container(
-              color: Colors.black.withOpacity(0.5),
-              child: const Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(color: Colors.white),
-                    SizedBox(height: 12),
-                    Text(
-                      "Processando...",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
         ],
       ),
     );

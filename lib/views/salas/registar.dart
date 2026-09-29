@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../classes/Sala.dart';
  // importa a classe Sala
@@ -41,10 +42,12 @@ class _RegistarSalaState extends State<RegistarSala> {
 
   /// Função para salvar no DB
   Future<void> _salvarSala() async {
+    var uuid = Uuid();
+    String novoId = uuid.v4();
     if (_formKey.currentState!.validate()) {
       Sala sala = Sala(
         codigo_barra: _codigoBarraController.text.trim(),
-        num_sala: _numSalaController.text.trim(),
+        num_sala: _numSalaController.text.trim(), unique_id: novoId,
       );
 
       await Sala.openDb();

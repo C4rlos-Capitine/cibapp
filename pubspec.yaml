@@ -11,6 +11,8 @@ dependencies:
     sdk: flutter
   http: ^1.5.0
   simple_barcode_scanner: ^0.3.0
+  uuid: ^4.5.1
+  connectivity_plus: ^6.0.5
 
 
 dev_dependencies:
@@ -20,7 +22,8 @@ dev_dependencies:
   sqflite: ^2.3.3+1
   simple_barcode_scanner: ^0.3.0
 
+
 flutter:
   uses-material-design: true
   assets:
-    - assets/imagens/f-login__background.png
+    - assets/imagens/HCB_app-background.png

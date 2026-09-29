@@ -2,13 +2,14 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../classes/Inventario.dart';
 import '../classes/ArtigoInventario.dart';
+import '../config/Network.dart';
+import 'dart:async';
 
 Future<bool> syncInventarios() async {
   bool resp = false;
   try {
     // 1️⃣ Buscar inventários ainda não sincronizados
-    List<Inventario> unsynced = await Inventario.getUnsyncedInventarios();
-
+    List<Inventario> unsynced = await Inventario.getAll();
 
     if (unsynced.isEmpty) {
       print("Nenhum inventário para sincronizar");
@@ -17,16 +18,20 @@ Future<bool> syncInventarios() async {
 
     // 2. Converter para JSON conforme o backend espera
     List<Map<String, dynamic>> inventariosMap =
-    unsynced.map((inv) => inv.toMapForSync()).toList();
+        unsynced.map((inv) => inv.toServerMap()).toList();
+    final inventarios = await Inventario.getUnsyncedInventarios();
+    final body = {
+      'inventarios': inventarios.map((e) => e.toServerMap()).toList()
+    };
 
-    String body = jsonEncode(inventariosMap);
+    // String body = jsonEncode(inventariosMap);
     print("JSON para enviar: $body");
 
     // 3. Enviar à API remota
     final response = await http.post(
-      Uri.parse("http://192.168.10.107:5021/api/Inventario/sync"),
+      Uri.parse("http://$address_port/api/Inventario/sync"),
       headers: {"Content-Type": "application/json"},
-      body: body,
+      body: jsonEncode(body),
     );
 
     print(response.statusCode);
@@ -51,27 +56,31 @@ Future<bool> syncInventarios() async {
 
   return resp;
 }
-Future<void> fetchAndStoreInventarios() async {
+
+Future<List<Inventario>?> fetchAndStoreInventarios() async {
+  List<Inventario> inventarios = [];
   try {
-    final response = await http.get(
-      Uri.parse("http://192.168.10.107:5021/api/Inventario"),
-    );
+    final response = await http
+        .get(Uri.parse("http://$address_port/api/Inventario"))
+        .timeout(const Duration(seconds: 20));
 
     if (response.statusCode == 200) {
       List<dynamic> data = jsonDecode(response.body);
       print("Dados brutos da API (Inventarios): $data");
 
-      List<Inventario> inventarios = data.map((item) {
+      inventarios = data.map((item) {
         return Inventario(
-          id_inventario: item["id_inventario"] ?? "",
-          id_sala: item["id_sala"] ?? "",
+          // id_inventario: item["id_inventario"] ?? "",
+          id_inventario: 1,
+          id_sala: 1,
           nome_inventario: item["nome_inventario"]?.toString() ?? "",
-          isSynced: item["isSynced"] ?? 0,
-          data_inicio: item['data_inicio'] != null
-              ? DateTime.tryParse(item['data_inicio'].toString())!
-              : DateTime.now(), // ou algum valor padrão
+          isSynced: 0,
+          data_inicio: DateTime.now(), // ou algum valor padrão
 
-          lastUpdated: item['lastUpdated'],
+          lastUpdated: DateTime.now(),
+          unique_id_sala: item["id_inventario"] ?? "",
+          id_inventario_unique: item["id_inventario"] ?? "",
+          codigo_sala: item["id_inventario"] ?? "",
         );
       }).toList();
 
@@ -83,27 +92,71 @@ Future<void> fetchAndStoreInventarios() async {
       print("Inventários armazenados/atualizados localmente!");
     } else {
       print("Erro ao buscar inventários: ${response.body}");
+      return null;
     }
+  } on TimeoutException catch (_) {
+    print("⏳ Timeout ao buscar inventários");
+    return await Inventario.getAll();
   } catch (e) {
     print("Erro ao sincronizar inventários: $e");
+    return null;
+  }
+  return inventarios;
+}
+
+Future<List<Inventario>?> fetchInventarios() async {
+  try {
+    final response = await http
+        .get(Uri.parse("http://$address_port/api/Inventario"))
+        .timeout(const Duration(seconds: 30));
+
+    if (response.statusCode == 200) {
+      List<dynamic> data = jsonDecode(response.body);
+      print("Dados brutos da API (Inventarios): $data");
+
+      List<Inventario> inventarios = data.map((item) {
+        return Inventario(
+          id_inventario: 1,
+          id_sala: 1,
+          nome_inventario: item["nome_inventario"]?.toString() ?? "",
+          isSynced: 0,
+          data_inicio: DateTime.now(), // ou algum valor padrão
+
+          lastUpdated: DateTime.now(),
+          unique_id_sala: item["id_inventario"] ?? "",
+          id_inventario_unique: item["id_inventario"] ?? "",
+          codigo_sala: item["id_inventario"] ?? "",
+        );
+      }).toList();
+      return inventarios;
+    } else {
+      print("Erro ao buscar inventários: ${response.body}");
+      return null;
+    }
+  } on TimeoutException catch (_) {
+    print("⏳ Timeout ao buscar inventários");
+    return null;
+  } catch (e) {
+    print("Erro ao sincronizar inventários: $e");
+    return null;
   }
 }
 
 Future<bool> syncInventarioArtigos() async {
   bool resp = false;
   try {
-    List<InventarioArtigo> unsynced = await InventarioArtigo.getUnsyncedInventarioArtigos();
+    List<InventarioArtigo> unsynced = await InventarioArtigo.getAll();
 
     if (unsynced.isEmpty) {
       print("Nenhum item de inventário para sincronizar");
       return false;
     }
 
-    String body = jsonEncode(unsynced.map((i) => i.toMap()).toList());
+    String body = jsonEncode(unsynced.map((i) => i.toServerMap2()).toList());
     print("JSON para enviar: $body");
 
     final response = await http.post(
-      Uri.parse("http://192.168.10.107:5021/api/InventarioArtigo/sync"),
+      Uri.parse("http://$address_port/api/InventarioArtigo/sync"),
       headers: {"Content-Type": "application/json"},
       body: body,
     );
@@ -130,7 +183,7 @@ Future<bool> syncInventarioArtigos() async {
 Future<void> fetchAndStoreInventarioArtigos() async {
   try {
     final response = await http.get(
-      Uri.parse("http://192.168.10.107:5021/api/InventarioArtigo"),
+      Uri.parse("http://$address_port/api/InventarioArtigo"),
     );
 
     if (response.statusCode == 200) {
@@ -146,6 +199,13 @@ Future<void> fetchAndStoreInventarioArtigos() async {
               ? DateTime.tryParse(item["lastUpdated"].toString())
               : null,
           isSynced: item["isSynced"] ?? 0,
+          unique_id_sala: item['unique_id_sala'],
+          unioque_id_inventario_artigo: item['unioque_id_inventario_artigo'],
+          unique_id_inventario: item['unique_id_inventario'],
+          unique_id_artigo: item['unique_id_artigo'],
+          nome_artigo: item['nome_artigo'],
+          num_artigo: item['num_artigo'],
+          nome_sala_actual: item['nome_sala_actual'],
         );
       }).toList();
 
@@ -161,4 +221,3 @@ Future<void> fetchAndStoreInventarioArtigos() async {
     print("Erro ao sincronizar InventarioArtigo: $e");
   }
 }
-

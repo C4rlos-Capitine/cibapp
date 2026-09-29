@@ -3,6 +3,7 @@ import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 
 import '../../classes/Artigo.dart';
 import '../../classes/Sala.dart';
+import 'package:uuid/uuid.dart';
 
 class RegistarArtigo extends StatefulWidget {
   const RegistarArtigo({super.key});
@@ -54,14 +55,21 @@ class _RegistarArtigoState extends State<RegistarArtigo> {
 
   /// Salvar artigo no DB
   Future<void> _salvarArtigo() async {
+    var uuid = Uuid();
+    String novoId = uuid.v4();
+
+    /*Sala? sala = _salas.firstWhere(
+          (s) => s.id_sala == _salaSelecionada, // evita erro se não achar
+    );*/
+
     if (_formKey.currentState!.validate()) {
       Artigo artigo = Artigo(
-        id_sala: _salaSelecionada ?? 0,
+        id_sala: 0,
         codigo_barra: _codigoBarraController.text.trim(),
         num_artigo: _numArtigoController.text.trim(),
         nome_artigo: _nomeArtigoController.text.trim(),
         data_registo: DateTime.now(),
-        data_update: DateTime.now(),
+        data_update: DateTime.now(), unique_id_artigo: novoId,
       );
 
       await Artigo.openDb();
@@ -161,7 +169,7 @@ class _RegistarArtigoState extends State<RegistarArtigo> {
                     const SizedBox(height: 16),
 
                     // Sala associada (Dropdown)
-                    DropdownButtonFormField<int>(
+                    /*DropdownButtonFormField<int>(
                       value: _salaSelecionada,
                       decoration: InputDecoration(
                         labelText: "Sala",
@@ -185,7 +193,7 @@ class _RegistarArtigoState extends State<RegistarArtigo> {
                       },
                       validator: (v) =>
                       v == null ? "Selecione uma sala" : null,
-                    ),
+                    ),*/
                     const SizedBox(height: 16),
 
                     // Código de barras

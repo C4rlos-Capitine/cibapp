@@ -8,9 +8,10 @@ class Sala {
   String num_sala;
   int isSynced; // 0 = não sincronizado, 1 = sincronizado
   DateTime lastUpdated;
-
+  String unique_id;
   Sala({
     this.id_sala,
+    required this.unique_id,
     required this.codigo_barra,
     required this.num_sala,
     this.isSynced = 0,
@@ -36,6 +37,7 @@ class Sala {
             id_sala INTEGER PRIMARY KEY AUTOINCREMENT,
             codigo_barra TEXT UNIQUE NOT NULL,
             num_sala TEXT NOT NULL,
+            unique_id TEXT UNIQUE NOT NULL,
             isSynced INTEGER DEFAULT 0,
             lastUpdated TEXT NOT NULL
           )
@@ -54,6 +56,7 @@ class Sala {
             id_sala INTEGER PRIMARY KEY AUTOINCREMENT,
             codigo_barra TEXT UNIQUE NOT NULL,
             num_sala TEXT NOT NULL,
+            unique_id TEXT UNIQUE NOT NULL,
             isSynced INTEGER DEFAULT 0,
             lastUpdated TEXT NOT NULL
           )
@@ -76,7 +79,32 @@ class Sala {
       'id_sala': id_sala,
       'codigo_barra': codigo_barra,
       'num_sala': num_sala,
+      'unique_id': unique_id,
       'isSynced': isSynced, // bool, não int
+      'lastUpdated': lastUpdated.toIso8601String(),
+    };
+  }
+
+
+  Map<String, Object?> toMapFromServer() {
+    return {
+      'id_sala': id_sala,
+      'codigo_barra': codigo_barra,
+      'num_sala': num_sala,
+      'unique_id': unique_id,
+      'isSynced': (isSynced == 1 || isSynced == true) ? 1 : 0, // bool, não int
+      'lastUpdated': lastUpdated.toIso8601String(),
+    };
+  }
+  //    'isSynced': (isSynced == 1 || isSynced == true) ? 1 : 0,
+
+
+  Map<String, Object?> toMapToServer() {
+    return {
+      'id_sala': unique_id,
+      'codigo_barra': codigo_barra,
+      'num_sala': num_sala,
+      'isSynced': isSynced == 1 || isSynced == true, // bool, não int
       'lastUpdated': lastUpdated.toIso8601String(),
     };
   }
@@ -93,6 +121,37 @@ class Sala {
     }
   }
   static Future<Sala?> getByCodigoBarra(String codigo) async {
+    openDb();
+    var db = await database;
+
+    final List<Map<String, dynamic>> maps = await db.query(
+      'sala',
+      where: 'codigo_barra = ?',
+      whereArgs: [codigo],
+    );
+
+    if (maps.isNotEmpty) {
+      return Sala.fromMap(maps.first);
+    }
+    return null;
+  }
+
+  static Future<Sala?> getByUniqueId(String unique_id) async {
+    openDb();
+    var db = await database;
+
+    final List<Map<String, dynamic>> maps = await db.query(
+      'sala',
+      where: 'unique_id = ?',
+      whereArgs: [unique_id],
+    );
+
+    if (maps.isNotEmpty) {
+      return Sala.fromMap(maps.first);
+    }
+    return null;
+  }
+  static Future<Sala?> getGuidByCodigoBarra(String codigo) async {
     openDb();
     var db = await database;
 
@@ -142,7 +201,7 @@ class Sala {
       num_sala: map['num_sala']?.toString() ?? "",
       isSynced: map['isSynced'] ?? 0,
       lastUpdated: DateTime.tryParse(map['lastUpdated'] ?? '') ??
-          DateTime.now(),
+          DateTime.now(), unique_id: map['unique_id'] ?? '',
     );
   }
 }

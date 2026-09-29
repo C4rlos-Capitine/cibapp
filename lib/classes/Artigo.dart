@@ -4,10 +4,11 @@ import 'package:path/path.dart';
 
 class Artigo {
   int? id_artigo;
-  int id_sala;
-  String codigo_barra;
-  String num_artigo;
-  String nome_artigo;
+  int id_sala;//1
+  String codigo_barra;//2
+  String num_artigo;//3
+  String nome_artigo;//4
+  String unique_id_artigo;//5
   DateTime data_registo;
   DateTime data_update;
   int isSynced; // 0 = não sincronizado, 1 = sincronizado
@@ -21,6 +22,7 @@ class Artigo {
     required this.nome_artigo,
     required this.data_registo,
     required this.data_update,
+    required this.unique_id_artigo,
     this.isSynced = 0,
     DateTime? lastUpdated,
   }) : lastUpdated = lastUpdated ?? DateTime.now();
@@ -42,10 +44,10 @@ class Artigo {
         await db.execute('''
           CREATE TABLE artigo (
             id_artigo INTEGER PRIMARY KEY AUTOINCREMENT,
-            id_sala INTEGER NOT NULL,
             codigo_barra TEXT UNIQUE NOT NULL,
             num_artigo TEXT NOT NULL,
             nome_artigo TEXT NOT NULL,
+            unique_id_artigo TEXT NOT NULL,
             data_registo TEXT NOT NULL,
             data_update TEXT NOT NULL,
             isSynced INTEGER DEFAULT 0,
@@ -98,10 +100,10 @@ class Artigo {
         await txn.execute('''
           CREATE TABLE IF NOT EXISTS artigo (
             id_artigo INTEGER PRIMARY KEY AUTOINCREMENT,
-            id_sala INTEGER NOT NULL,
             codigo_barra TEXT UNIQUE NOT NULL,
             num_artigo TEXT NOT NULL,
             nome_artigo TEXT NOT NULL,
+            unique_id_artigo TEXT NOT NULL,
             data_registo TEXT NOT NULL,
             data_update TEXT NOT NULL,
             isSynced INTEGER DEFAULT 0,
@@ -132,7 +134,21 @@ class Artigo {
   Map<String, Object?> toMap() {
     return {
       'id_artigo': id_artigo,
-      'id_sala': id_sala,
+      'codigo_barra': codigo_barra,
+      'num_artigo': num_artigo,
+      'nome_artigo': nome_artigo,
+      'unique_id_artigo': unique_id_artigo,
+      'data_registo': data_registo.toIso8601String(),
+      'data_update': data_update.toIso8601String(),
+      'isSynced': isSynced, // bool, não int
+      'lastUpdated': lastUpdated.toIso8601String(),
+    };
+  }
+
+
+  Map<String, Object?> toMapToServer() {
+    return {
+      'id_artigo': unique_id_artigo,
       'codigo_barra': codigo_barra,
       'num_artigo': num_artigo,
       'nome_artigo': nome_artigo,
@@ -142,6 +158,18 @@ class Artigo {
       'lastUpdated': lastUpdated.toIso8601String(),
     };
   }
+
+  factory Artigo.fromServerMap(Map<String, dynamic> map) {
+    return Artigo(
+      unique_id_artigo: map["id_artigo"],
+      codigo_barra: map["codigo_barra"],
+      num_artigo: map["num_artigo"],
+      nome_artigo: map["nome_artigo"],
+      isSynced: (map["isSynced"] == true) ? 1 : 0,
+      lastUpdated: DateTime.tryParse(map["lastUpdated"] ?? "") ?? DateTime.now(), id_sala: 0, data_registo: DateTime.now(), data_update: DateTime.now(),
+    );
+  }
+
 
   static Future<int?> insert(Artigo artigo) async {
     openDb();
@@ -190,27 +218,21 @@ class Artigo {
       data_registo: DateTime.parse(map['data_registo']),
       data_update: DateTime.parse(map['data_update']),
       isSynced:map['isSynced'] ?? 0,
-      lastUpdated: DateTime.tryParse(map['lastUpdated'] ?? '') ?? DateTime.now(),
+      lastUpdated: DateTime.tryParse(map['lastUpdated'] ?? '') ?? DateTime.now(), unique_id_artigo: map['unique_id_artigo'],
     );
   }
 
   factory Artigo.fromMapAPI(Map<String, dynamic> map) {
     return Artigo(
-      id_artigo: map['id_Artigo'] ?? 0,
-      id_sala: map['id_Sala'] ?? 0,
-      codigo_barra: map['codigo_Barra']?.toString() ?? "",
-      num_artigo: map['num_Artigo']?.toString() ?? "",
-      nome_artigo: map['nome_Artigo']?.toString() ?? "",
-      data_registo: map['data_Registo'] != null
-          ? DateTime.tryParse(map['data_Registo']) ?? DateTime.now()
-          : DateTime.now(),
-      data_update: map['data_Update'] != null
-          ? DateTime.tryParse(map['data_Update']) ?? DateTime.now()
-          : DateTime.now(),
+      id_sala: 0,
+      codigo_barra: map['codigo_barra']?.toString() ?? "",
+      num_artigo: map['codigo_barra']?.toString() ?? "",
+      nome_artigo: map['nome_artigo']?.toString() ?? "",
+      data_registo: map['data_registo'] != null? DateTime.tryParse(map['data_registo']) ?? DateTime.now(): DateTime.now(),
+      data_update: map['data_update'] != null ? DateTime.tryParse(map['data_update']) ?? DateTime.now() : DateTime.now(),
       isSynced: map['isSynced'] ?? 0,
-      lastUpdated: map['lastUpdated'] != null
-          ? DateTime.tryParse(map['lastUpdated']) ?? DateTime.now()
-          : DateTime.now(),
+      lastUpdated: map['lastUpdated'] != null? DateTime.tryParse(map['lastUpdated']) ?? DateTime.now() : DateTime.now(),
+      unique_id_artigo: map['id_artigo'],
     );
   }
 
